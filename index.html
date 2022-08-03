@@ -1,42 +1,253 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
 <head>
-    <meta charset="utf-8" />
-    <title>Learn how to build 2D HTML5 Breakout game in pure JavaScript</title>
-    <style>
-        body { width: 650px; margin: 0 auto; }
-        a { color: #0095DD; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-    </style>
+    <meta charset="utf-8"/>
+    <title>JS Sports Ball (Rainbow Edition)</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<header><h2 class="title">Sports Ball</h2></header>
+<div><p class="controls">Controls: you can use your mouse to play, or you can use the left and right arrow keys to move
+    left and right.</p></div>
+<canvas id="myCanvas" width="600" height="400" class="mycanvas"></canvas>
+<canvas id="messageCanvas" width="600" height="100" class="messagecanvas"></canvas>
+<div><p class="description">Sports ball is a brick breaker game developed in Javascript. The appearance of sports ball
+    is a purple background with randomly generated rainbow bricks each time the page refreshes. Use the paddle to bounce
+    the ball and hit bricks. Each brick is 1 point. Break them all to win.</p></div>
+<script>
+    //canvas
+    let canvas = document.getElementById("myCanvas");
+    let ctx = canvas.getContext("2d");
+    let x = canvas.width / 2;
+    let y = canvas.height - 30;
+    let dx = 2;
+    let dy = -2;
 
-<h1>Learn how to build 2D HTML5 Breakout game in pure JavaScript</h1>
+    //delay function
+    const delay = ms => new Promise(res => setTimeout(res, ms));
 
-<p>In this step-by-step <a href="https://github.com/end3r/Gamedev-Canvas-workshop">tutorial</a> we create a simple MDN Breakout game written entirely in pure JavaScript and rendered on HTML5 Canvas. Every step has editable, live samples available to play with so you can see what the intermediate stages should look like. You will learn the basics of using the Canvas element to implement fundamental game mechanics like rendering and moving images, collision detection, control machanisms, and winning and losing states.</p>
+    //gradient
+    let angleA = Math.random() * 90;                                // start angle (for HSL)
+    let angleB = Math.random() * 320;
+    let angleC = Math.random() * 180;
+    //let angleD = Math.random() * 360;
+    //let angleE = Math.random() * 360;
 
-<p><img src="https://mdn.mozillademos.org/files/10383/mdn-breakout-gameplay.png" alt="MDN Breakout gameplay" /></p>
+    //ball
+    let ballRadius = 10;
 
-<p>To get the most out of this series of articles you should already have basic to intermediate JavaScript knowledge. After working through this tutorial you should be able to build your own simple Web games.</p>
+    //paddle
+    let paddleHeight = 15;
+    let paddleWidth = 80;
+    let paddleX = (canvas.width - paddleWidth) / 2;
+    let paddleGap = (canvas.width - paddleWidth)
 
-<h2><a href="https://developer.mozilla.org/en-US/docs/Games/Workflows/2D_Breakout_game_pure_JavaScript">2D breakout game using pure JavaScript</a></h2>
+    //controls
+    let rightPressed
+    let leftPressed
+    let score = 0;
+    let lose = "You Lose"
+    let win = "You Win"
+    const interval = setInterval(draw, 13);
+    //let lives = 5;
 
-<ol>
-    <li><a href="https://developer.mozilla.org/en-US/docs/Games/Workflows/2D_Breakout_game_pure_JavaScript/Create_the_Canvas_and_draw_on_it">Create the Canvas and draw on it</a> - <a href="http://breakout.enclavegames.com/lesson01.html">example #1</a></li>
-    <li><a href="https://developer.mozilla.org/en-US/docs/Games/Workflows/2D_Breakout_game_pure_JavaScript/Move_the_ball">Move the ball</a> - <a href="http://breakout.enclavegames.com/lesson02.html">example #2</a></li>
-    <li><a href="https://developer.mozilla.org/en-US/docs/Games/Workflows/2D_Breakout_game_pure_JavaScript/Bounce_off_the_walls">Bounce off the walls</a> - <a href="http://breakout.enclavegames.com/lesson03.html">example #3</a></li>
-    <li><a href="https://developer.mozilla.org/en-US/docs/Games/Workflows/2D_Breakout_game_pure_JavaScript/Paddle_and_keyboard_controls">Paddle and keyboard controls</a> - <a href="http://breakout.enclavegames.com/lesson04.html">example #4</a></li>
-    <li><a href="https://developer.mozilla.org/en-US/docs/Games/Workflows/2D_Breakout_game_pure_JavaScript/Game_over">Game over</a> - <a href="http://breakout.enclavegames.com/lesson05.html">example #5</a></li>
-    <li><a href="https://developer.mozilla.org/en-US/docs/Games/Workflows/2D_Breakout_game_pure_JavaScript/Build_the_brick_field">Build the brick field</a> - <a href="http://breakout.enclavegames.com/lesson06.html">example #6</a></li>
-    <li><a href="https://developer.mozilla.org/en-US/docs/Games/Workflows/2D_Breakout_game_pure_JavaScript/Collision_detection">Collision detection</a> - <a href="http://breakout.enclavegames.com/lesson07.html">example #7</a></li>
-    <li><a href="https://developer.mozilla.org/en-US/docs/Games/Workflows/2D_Breakout_game_pure_JavaScript/Track_the_score_and_win">Track the score and win</a> - <a href="http://breakout.enclavegames.com/lesson08.html">example #8</a></li>
-    <li><a href="https://developer.mozilla.org/en-US/docs/Games/Workflows/2D_Breakout_game_pure_JavaScript/Mouse_controls">Mouse controls</a> - <a href="http://breakout.enclavegames.com/lesson09.html">example #9</a></li>
-    <li><a href="https://developer.mozilla.org/en-US/docs/Games/Workflows/2D_Breakout_game_pure_JavaScript/Finishing_up">Finishing up</a> - <a href="http://breakout.enclavegames.com/lesson10.html">example #10</a></li>
-</ol>
+    //bricks incoming
+    let brickRowCount = 5;
+    let brickColumnCount = 7;
+    let brickWidth = 70;
+    let brickHeight = 20;
+    let brickPadding = 10;
+    let brickOffsetTop = 30;
+    let brickOffsetLeft = 30;
 
-<p>Starting with pure JavaScript is the best way to get a solid knowledge of web game development. After that, you can pick any framework you like and use it for your projects. Frameworks are just tools built with the JavaScript language; so even if you plan on working with them, it's good to learn about the language itself first to know what exactly is going on under the hood. Frameworks speed up development time and help take care of boring parts of the game, but if something is not working as expected, you can always try to debug that or just write your own solutions in pure JavaScript.</p>
+    let bricks = [];
+    for (let c = 0; c < brickColumnCount; c++) {
+        bricks[c] = [];
+        for (let r = 0; r < brickRowCount; r++) {
+            bricks[c][r] = {x: 0, y: 0, status: 1};
+        }
+    }
 
-<p>You can visit the <a href="https://github.com/end3r/Gamedev-Canvas-workshop">GitHub repository</a> of this tutorial to get the source code of all the lessons.</p>
+    //function to allow us to wait to reload the page
+    const waitFunction = async () => {
+        await delay(10000);
+        console.log("Waited 10s");
+        document.location.reload();
+    }
 
+    //listen for keyboard activities...
+    document.addEventListener("keydown", keyDownHandler, false);
+    document.addEventListener("keyup", keyUpHandler, false);
+    document.addEventListener("mousemove", mouseMoveHandler, false);
+    //document.addEventListener("touchmove", touchMoveHandler, )
+
+    function keyDownHandler(e) {
+        if (e.key === "Right" || e.key === "ArrowRight") {
+            rightPressed = true;
+        } else if (e.key === "Left" || e.key === "ArrowLeft") {
+            leftPressed = true;
+        }
+    }
+
+    function keyUpHandler(e) {
+        if (e.key === "Right" || e.key === "ArrowRight") {
+            rightPressed = false;
+        } else if (e.key === "Left" || e.key === "ArrowLeft") {
+            leftPressed = false;
+        }
+    }
+
+    function mouseMoveHandler(e) {
+        let relativeX = e.clientX - canvas.offsetLeft;
+        if (relativeX > 0 && relativeX < canvas.width) {
+            paddleX = relativeX - paddleWidth / 2;
+        }
+    }
+
+    //function to draw the ball
+    function drawBall() {
+        ctx.beginPath();
+        ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
+        ctx.fillStyle = "#ecb060";
+        ctx.outlineColor = "#000"
+        ctx.fill();
+        ctx.closePath();
+    }
+
+    //function to draw the paddle
+    function drawPaddle() {
+        ctx.beginPath();
+        ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
+        ctx.fillStyle = "#abd8ee";
+        ctx.fill();
+        ctx.closePath();
+    }
+
+    //gradient function because we want rainbow bricks obviously
+    function createGradient() {
+        let gradientColor = ctx.createLinearGradient(0, 0, 500, 125);
+        gradientColor.addColorStop(0, "hsl(" + (angleA % 360) + ",100%, 50%)");
+        gradientColor.addColorStop(1, "hsl(" + (angleB % 360) + ",100%, 75%)");
+        gradientColor.addColorStop(0.5, "hsl(" + (angleC % 360) + ",100%, 50%)");
+        ctx.fillStyle = gradientColor;
+        ctx.clearRect(brickPadding, brickPadding, brickWidth, brickHeight);
+    }
+
+    //function to draw some bricks
+    function drawBricks() {
+        for (let c = 0; c < brickColumnCount; c++) {
+            for (let r = 0; r < brickRowCount; r++) {
+                createGradient();
+                if (bricks[c][r].status === 1) {
+                    let brickX = (c * (brickWidth + brickPadding)) + brickOffsetLeft;
+                    let brickY = (r * (brickHeight + brickPadding)) + brickOffsetTop;
+                    bricks[c][r].x = brickX;
+                    bricks[c][r].y = brickY;
+                    ctx.beginPath();
+                    ctx.rect(brickX, brickY, brickWidth, brickHeight);
+                    ctx.fill();
+                    ctx.closePath();
+                }
+            }
+        }
+    }
+
+    function paddle() {
+        if (rightPressed && paddleX < canvas.width - paddleWidth) {
+            paddleX += 7;
+        } else if (leftPressed && paddleX > 0) {
+            paddleX -= 7;
+        }
+    }
+
+    //check if we hit anything!
+    function collisionDetection() {
+        for (let c = 0; c < brickColumnCount; c++) {
+            for (let r = 0; r < brickRowCount; r++) {
+                const b = bricks[c][r];
+                if (b.status === 1) {
+                    if (x > b.x && x < b.x + brickWidth && y > b.y && y < b.y + brickHeight) {
+                        dy = -dy;
+                        b.status = 0;
+                        score++;
+                    }
+                }
+            }
+        }
+    }
+
+    // function drawLives() {
+    //     ctx.font = "18px Arial";
+    //     ctx.fillStyle = "#000000";
+    //     ctx.fillText("Lives: "+lives, canvas.width-65, 20);
+    // }
+
+    function drawScore() {
+        ctx.font = "18px Arial";
+        ctx.fillStyle = "#000";
+        ctx.fillText(`Score: ${score}`, 8, 20);
+    }
+
+    function drawAlertLose() {
+        let ctx2 = document.getElementById("messageCanvas").getContext('2d');
+        ctx2.font = "32px Arial";
+        ctx2.fillStyle = "#ffffff";
+        ctx2.fillText(lose, 260, 47)
+    }
+
+    function drawAlertWin() {
+        let ctx2 = document.getElementById("messageCanvas").getContext('2d');
+        ctx2.font = "32px Arial";
+        ctx2.fillStyle = "#ffffff";
+        ctx2.fillText(win, 260, 47)
+    }
+
+    function loser() {
+        if (y + dy > canvas.height - ballRadius) {
+            if (x > paddleX && x < paddleX + paddleWidth) {
+                dy = -dy;
+            } else if (y + dy > canvas.height && paddleGap) {
+                drawAlertLose();
+                waitFunction();
+                clearInterval(interval);
+            }
+        }
+    }
+
+    function winner() {
+        if (score === brickRowCount * brickColumnCount) {
+            drawAlertWin();
+            waitFunction();
+            clearInterval(interval);
+        }
+    }
+
+    //function to put all functions together
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawBricks();
+        drawBall();
+        drawPaddle();
+        paddle();
+        collisionDetection();
+        drawScore();
+        loser();
+        winner();
+
+        x += dx;
+        y += dy;
+
+        if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
+            dx = -dx;
+        }
+        if (y + dy < ballRadius) {
+            dy = -dy;
+        } else if (y + dy > canvas.height - ballRadius) {
+            if (x > paddleX && x < paddleX + paddleWidth) {
+                dy = -dy; //let the ball bounce!
+            }
+        }
+    }
+</script>
 </body>
 </html>
